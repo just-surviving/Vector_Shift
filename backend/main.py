@@ -2,8 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from collections import defaultdict
 
 app = FastAPI(title="Pipeline Parser API")
@@ -22,33 +21,7 @@ app.add_middleware(
 )
 
 
-class Node(BaseModel):
-    id: str
-    type: Optional[str] = None
-    position: Optional[Dict[str, float]] = None
-    data: Optional[Dict[str, Any]] = None
-
-
-class Edge(BaseModel):
-    id: Optional[str] = None
-    source: str
-    target: str
-    sourceHandle: Optional[str] = None
-    targetHandle: Optional[str] = None
-
-
-class PipelineRequest(BaseModel):
-    nodes: List[Node]
-    edges: List[Edge]
-
-
-class PipelineResponse(BaseModel):
-    num_nodes: int
-    num_edges: int
-    is_dag: bool
-
-
-def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
+def is_dag(nodes: List[Dict], edges: List[Dict]) -> bool:
     """
     Check if the graph is a Directed Acyclic Graph (DAG) using Kahn's algorithm.
     Returns True if the graph is a DAG, False if it contains cycles.
@@ -57,7 +30,7 @@ def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
         return True
     
     # Build adjacency list and in-degree count
-    node_ids = {node.id for node in nodes}
+    node_ids = {node.get('id') for node in nodes if node.get('id')}
     adj_list = defaultdict(list)
     in_degree = defaultdict(int)
     
@@ -67,8 +40,8 @@ def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
     
     # Build graph from edges
     for edge in edges:
-        source = edge.source
-        target = edge.target
+        source = edge.get('source')
+        target = edge.get('target')
         
         # Only consider edges between existing nodes
         if source in node_ids and target in node_ids:
@@ -99,8 +72,8 @@ def read_root():
     return {'status': 'ok', 'message': 'Pipeline Parser API is running'}
 
 
-@app.post('/pipelines/parse', response_model=PipelineResponse)
-def parse_pipeline(pipeline: PipelineRequest):
+@app.post('/pipelines/parse')
+def parse_pipeline(pipeline: Dict[str, Any]):
     """
     Parse the pipeline and return analysis results.
     
@@ -109,18 +82,18 @@ def parse_pipeline(pipeline: PipelineRequest):
         - num_edges: Number of edges (connections) in the pipeline
         - is_dag: Whether the pipeline forms a valid DAG (no cycles)
     """
-    nodes = pipeline.nodes
-    edges = pipeline.edges
+    nodes = pipeline.get('nodes', [])
+    edges = pipeline.get('edges', [])
     
     num_nodes = len(nodes)
     num_edges = len(edges)
     is_dag_result = is_dag(nodes, edges)
     
-    return PipelineResponse(
-        num_nodes=num_nodes,
-        num_edges=num_edges,
-        is_dag=is_dag_result
-    )
+    return {
+        'num_nodes': num_nodes,
+        'num_edges': num_edges,
+        'is_dag': is_dag_result
+    }
 
 
 if __name__ == "__main__":

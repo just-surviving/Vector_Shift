@@ -51,6 +51,7 @@ export const SubmitButton = () => {
     } catch (error) {
       console.error('Error submitting pipeline:', error);
       
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
       const errorMessage = 
         `❌ Connection Error\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
