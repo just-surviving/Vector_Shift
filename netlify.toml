@@ -1,6 +1,6 @@
 [build]
   base = "frontend"
-  publish = "frontend/build"
+  publish = "build"
   command = "npm run build"
 
 [build.environment]
@@ -15,4 +15,4 @@
 [dev]
   command = "npm start"
   port = 3000
-  publish = "frontend/build"
+  publish = "build"
