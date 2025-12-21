@@ -10,11 +10,7 @@ app = FastAPI(title="Pipeline Parser API")
 # Enable CORS for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://vectorshift-pipeline.netlify.app",
-        "https://*.netlify.app"
-    ],
+    allow_origins=["*"],  # Allow all origins for flexibility
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
